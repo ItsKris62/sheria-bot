@@ -183,11 +183,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   const signup = useCallback(
-    async (data: { full_name?: string | null; email: string; password: string }, opts?: { persistSession?: boolean }) => {
+    async (
+      data: { full_name: string; email: string; password: string; organization?: string | null },
+      opts?: { persistSession?: boolean },
+    ) => {
       setError(null)
       setIsLoading(true)
 
-      const result = await apiClient.signup(data)
+      const result = await apiClient.signup({
+        full_name: data.full_name,
+        email: data.email,
+        password: data.password,
+        organization: data.organization ?? null,
+      })
+
       if (result.data) {
         const auth = result.data as AuthResponse
         applyToken(auth.tokens.access_token, { persistSession: !!opts?.persistSession })

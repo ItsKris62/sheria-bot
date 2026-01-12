@@ -104,7 +104,7 @@ function buildErrorFromResponse(status: number, parsed: any | null, fallbackText
     (parsed &&
       typeof parsed === "object" &&
       ("detail" in parsed || "message" in parsed) &&
-      // @ts-expect-error dynamic read
+      // ts-expect-error dynamic read
       (parsed.detail || parsed.message)) ||
     null
 
@@ -253,21 +253,21 @@ class ApiClient {
     })
   }
 
-  async signup(data: { name: string; email: string; organization?: string; password: string }) {
-  return this.request<AuthResponse>("/auth/signup", {
-    method: "POST",
-    body: JSON.stringify({
-      email: data.email,
-      password: data.password,
-      full_name: data.name,
-      organization: data.organization || null,
-    }),
-  })
-}
+  async signup(data: { full_name: string; email: string; organization?: string | null; password: string }) {
+    return this.request<AuthResponse>("/auth/signup", {
+      method: "POST",
+      body: JSON.stringify({
+        email: data.email,
+        password: data.password,
+        full_name: data.full_name,
+        organization: data.organization ?? null,
+      }),
+    })
+  }
 
   async refresh() {
     // Uses httpOnly cookie refresh_token; must be credentials: "include"
-    return this.request<Tokens>("/auth/refresh", {
+    return this.rawRequest<Tokens>("/auth/refresh", {
       method: "POST",
       retryOn401: false,
     })

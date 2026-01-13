@@ -266,12 +266,10 @@ class ApiClient {
   }
 
   async refresh() {
-    // Uses httpOnly cookie refresh_token; must be credentials: "include"
-    return this.rawRequest<Tokens>("/auth/refresh", {
-      method: "POST",
-      retryOn401: false,
-    })
-  }
+  const res = await this.rawRequest<Tokens>("/auth/refresh", { method: "POST", retryOn401: false })
+  if (res.error?.status === 401) return {} // silent unauthenticated
+  return res
+}
 
   async logout() {
     return this.request<void>("/auth/logout", {

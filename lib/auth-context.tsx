@@ -24,12 +24,16 @@ interface AuthContextType {
 
   login: (email: string, password: string, opts?: { persistSession?: boolean }) => Promise<boolean>
   signup: (
-    data: { full_name?: string | null; email: string; password: string },
+    data: { full_name?: string | null; email: string; password: string; organization?: string | null },
     opts?: { persistSession?: boolean },
-  ) => Promise<boolean>
+  ) => Promise<{ success: boolean; message?: string }>
   forgotPassword: (email: string) => Promise<boolean>
   logout: () => Promise<void>
   clearError: () => void
+
+  // Email verification methods
+  verifyEmail: (token: string) => Promise<{ success: boolean; message?: string }>
+  resendVerification: (email: string) => Promise<{ success: boolean; message?: string }>
 
   getAccessToken: () => string | null
   hasRole: (role: string) => boolean
@@ -197,20 +201,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         organization: data.organization ?? null,
       })
 
+      setIsLoading(false)
+
       if (result.data) {
+        // New behavior: Signup auto-logs in user and returns tokens
+        // User can access chat immediately (with verification banner if email not verified)
         const auth = result.data as AuthResponse
         applyToken(auth.tokens.access_token, { persistSession: !!opts?.persistSession })
         setUser(auth.user)
-        setIsLoading(false)
-        return true
+        return { success: true, message: "Account created successfully! Welcome to SheriaBot." }
       }
 
       setError(result.error || null)
-      setIsLoading(false)
-      return false
+      return { success: false, message: result.error?.message }
     },
     [applyToken],
   )
+
+  const verifyEmail = useCallback(async (token: string) => {
+    setError(null)
+    setIsLoading(true)
+
+    const result = await apiClient.verifyEmail(token)
+
+    setIsLoading(false)
+
+    if (result.data) {
+      return { success: true, message: result.data.message }
+    }
+
+    setError(result.error || null)
+    return { success: false, message: result.error?.message }
+  }, [])
+
+  const resendVerification = useCallback(async (email: string) => {
+    setError(null)
+    setIsLoading(true)
+
+    const result = await apiClient.resendVerification(email)
+
+    setIsLoading(false)
+
+    if (result.data) {
+      return { success: true, message: result.data.message }
+    }
+
+    setError(result.error || null)
+    return { success: false, message: result.error?.message }
+  }, [])
 
   const forgotPassword = useCallback(async (email: string) => {
     setError(null)
@@ -250,11 +288,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       forgotPassword,
       logout,
       clearError,
+      verifyEmail,
+      resendVerification,
       getAccessToken,
       hasRole,
       hasPermission,
     }),
-    [user, claims, accessToken, isLoading, error, login, signup, forgotPassword, logout, clearError, getAccessToken, hasRole, hasPermission],
+    [user, claims, accessToken, isLoading, error, login, signup, forgotPassword, logout, clearError, verifyEmail, resendVerification, getAccessToken, hasRole, hasPermission],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

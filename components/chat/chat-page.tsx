@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils"
 import { useAuth } from "@/lib/auth-context"
 import { useChat } from "@/lib/chat-context"
 import type { ChatMessage, Citation, ChatSession } from "@/lib/api-client"
+import { VerificationBanner } from "@/components/auth/verification-banner"
 
 export function ChatPage() {
   return <ChatPageContent />
@@ -156,6 +157,13 @@ function ChatPageContent() {
             <div className="w-2 h-2 rounded-full bg-emerald-500" title="Connected" />
           </div>
         </header>
+
+        {/* Email Verification Banner */}
+        <div className="border-b border-zinc-800">
+          <div className="max-w-4xl mx-auto px-4 py-3">
+            <VerificationBanner />
+          </div>
+        </div>
 
         {/* Messages Area */}
         <div className="flex-1 overflow-hidden flex">

@@ -25,6 +25,8 @@ export interface UserPublic {
   email: string
   full_name?: string | null
   is_active: boolean
+  email_verified?: boolean
+  email_verified_at?: string | null
 }
 
 export interface Tokens {
@@ -262,6 +264,20 @@ class ApiClient {
         full_name: data.full_name,
         organization: data.organization ?? null,
       }),
+    })
+  }
+
+  async verifyEmail(token: string) {
+    return this.request<{ message: string; email: string }>("/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    })
+  }
+
+  async resendVerification(email: string) {
+    return this.request<{ message: string }>("/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify({ email }),
     })
   }
 

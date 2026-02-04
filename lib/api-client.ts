@@ -1,7 +1,11 @@
 // lib/api-client.ts
 // Centralized API client for SheriaBot backend communication (aligned with backend contract)
 
-const API_BASE_URL_RAW = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080"
+// Use proxy path for browser requests to avoid cross-origin cookie issues (SameSite=lax)
+// The proxy is configured in next.config.mjs to forward /api/backend/* to the backend
+const API_BASE_URL_RAW = typeof window !== 'undefined'
+  ? '/api/backend'  // Client-side: use Next.js proxy
+  : (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080")  // Server-side: direct
 const API_BASE_URL = API_BASE_URL_RAW.replace(/\/+$/, "")
 
 export interface ApiError {
